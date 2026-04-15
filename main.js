@@ -6,30 +6,68 @@ let recordedSequence = [];
 // indique si on est en train d'enregistrer ou non///////////
 let isRecording = false;
 
-addEventListener("keydown", handleAudioListener);
-addEventListener("keyup", handleStopEffect);
+addEventListener("keydown", handleKeyDownEvent);
+addEventListener("keyup", handleKeyUpEvent);
 
 ///////////////////////////////////////////////////////////////////////////////////////
-function handleAudioListener(event) {
-  console.log(event);
+function handleKeyDownEvent(event) {
+  // console.log(event);
+ // eviter les repetions automatique:
+  if (event.repeat) return;
 
   // récupère la valeur de l'attribut data-key du bouton cliqué
   // OU on récupère le code de la touche clavier///////////////////////////////
-  let keyValue = event.keyCode;
-  // cherche dans le html un élément <audio> qui possède le même data-key que le bouton
-  let audio = document.querySelector(`audio[data-key="${keyValue}"]`);
+  let keyCode = event.keyCode;
 
-  // eviter les repetions automatique:
-  if (event.repeat) return;
+  hub(keyCode);
+ 
+}
+
+// EVENEMENT DE CLICK
+
+padKeys.forEach(key => {
+  key.addEventListener("click",handleClickKey);
+});
+
+function handleClickKey(event) {
+  const padKey = event.target.closest('[data-key]');
+  if (!padKey) return;
+  
+  let keyCode = parseInt(padKey.dataset.key) ;
+  
+  hub(keyCode);
+  
+  setTimeout(() => {
+    removeAnimation(keyCode);
+  }, 200);
+  
+}
+
+/////FONCTION "ACCUEIL" QUI REDIRIGE VERS LE BON SERVICE///////////
+function hub(keyCode) {
+
+  
   // Gestion des touches spéciales////////////////:::
   // lance ou arrete l'enregistrement////////////////////
-  if (keyValue === 82) {
-    record(keyValue);
+  if (keyCode === 82) {
+    record(keyCode);
+    return;
   }
   // rejoue la sequence/////////////////////////////////
-  if (keyValue === 80) {
-    play(keyValue);
+  if (keyCode === 80) {
+    play(keyCode);
+    return;
   }
+
+  playSound(keyCode)
+
+}
+
+
+/////FONCTION JOUE UN SON///////////
+function playSound(keyCode) {
+  // cherche dans le html un élément <audio> qui possède le même data-key que le bouton
+  let audio = document.querySelector(`audio[data-key="${keyCode}"]`);
 
   // si aucun son on quitte//////////
   if (!audio) return;
@@ -43,20 +81,22 @@ function handleAudioListener(event) {
     let time = Date.now() - startTime;
     // si en mode enregistrement, stocke la touche ?????stocker le temps///////////
 
-    // recordedSequence.push({keyValue, time});
-    recordedSequence.push({ key: keyValue, time: time });
-    // recordedSequence.push(keyValue);
-    console.log(recordedSequence);
+    // recordedSequence.push({keyCode, time});
+    recordedSequence.push({ key: keyCode, time: time });
+    // recordedSequence.push(keyCode);
+    // console.log(recordedSequence);
   }
-  // // effet visuel///////////////////////////////////////////////////////////////////
-  let padKey = document.querySelector(`div[data-key="${keyValue}"]`);
+
+   // // effet visuel///////////////////////////////////////////////////////////////////
+  let padKey = document.querySelector(`div[data-key="${keyCode}"]`);
   padKey.classList.add("playing");
+
 }
 
 // ********************************************
 /////FONCTION RECORD()///////////
-function record(keyValue) {
-  let padKey = document.querySelector(`div[data-key="${keyValue}"]`);
+function record(keyCode) {
+  let padKey = document.querySelector(`div[data-key="${keyCode}"]`);
   // ajoute ou enleve l'effet visuel///////////////////////////////////////////////
   padKey.classList.toggle("playing");
 
@@ -81,8 +121,8 @@ function record(keyValue) {
 // *****************************************
 // FONCTION PLAY::::::::::::::::::
 /////////////////////////////////
-function play(keyValue) {
-  let padKey = document.querySelector(`div[data-key="${keyValue}"]`);
+function play(keyCode) {
+  let padKey = document.querySelector(`div[data-key="${keyCode}"]`);
   // ajoute l'effet visuel///////////////////////////////////////////////
   padKey.classList.add("playing");
 
@@ -114,14 +154,23 @@ function play(keyValue) {
 
 // ////FONCTION HANDELSTOPEFFECT ********************************
 
-function handleStopEffect(event) {
+function handleKeyUpEvent(event) {
   // console.log(event);
-  let keyValue = event.keyCode;
+  let keyCode = event.keyCode;
+
+  removeAnimation(keyCode);
+  
+}
+
+function removeAnimation(keyCode) {
   // recupère la touche ////////////////////////////
-  let padKey = document.querySelector(`div[data-key="${keyValue}"]`);
+  let padKey = document.querySelector(`div[data-key="${keyCode}"]`);
   // conditions:
   // ignore si pas de bouton associé // si touche R//////////////////////
-  if (!padKey || keyValue === 82 || keyValue === 80) return;
+  if (!padKey || keyCode === 82 || keyCode === 80) return;
   // retirer l'effet visuel///////////////////////////////////////////////
   padKey.classList.remove("playing");
 }
+
+
+
